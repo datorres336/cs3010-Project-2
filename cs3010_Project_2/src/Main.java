@@ -10,51 +10,57 @@ public class Main {
         int numOfEquations = 0;
         double errorVal = 0.0;
         int userChoice;
-        double[] iterationValues;
-        int iterationCount = 0;
-        double[][] matrix;
+        //double[] iterationValues; //don't delete
+        //double[][] matrix; // don't delete
+        double[] iterationValues = {0,0,0}; // DEBUG CODE
+        double[][] matrix = {{5, -1, 2, 12},{3, 8, -2, -25},{1, 1, 4, 6}}; // debug code
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("How many linear equations would you like to see get solved with " +
                 "the Jacobi and Gauss-Seidel methods? ");
-        numOfEquations = Integer.parseInt(scanner.nextLine());
+        //numOfEquations = Integer.parseInt(scanner.nextLine()); //don't delete
+        numOfEquations = 3; //DEBUG CODE
 
         System.out.println("Would you like to manually enter the matrix values for " +
                 "the equations (option 1) or enter a matrix text file? (option 2) \n " +
                 "Enter 1 for option 1 or 2 for option 2: ");
-        userChoice = Integer.parseInt(scanner.nextLine());
+        //userChoice = Integer.parseInt(scanner.nextLine()); //don't delete
+        userChoice = 2; //DEBUG CODE
 
-        if (userChoice == 1) {
+       /* if (userChoice == 1) { //don't delete
             matrix = manualMatrix(scanner, numOfEquations);
         }
         else {
             matrix = txtFileMatrix(scanner, numOfEquations);
-        }
+        }*/
+
 
         System.out.println("Your matrix is: ");
         printMatrix(matrix);
-        System.out.println();
 
-        System.out.println("\nYour matrix is diagonally dominant: " + isDiagonallyDom(matrix));
+        System.out.println("\nYour matrix is diagonally dominant: \n" + isDiagonallyDom(matrix) + "\n");
         if(!isDiagonallyDom(matrix)) System.out.println("Sorry, unable to solve this " +
                 "matrix with Jacobi or Gauss-Seidel methods. Please try another matrix. ");
         else {
             System.out.println("Please input a desired stopping error: ");
-            errorVal = Double.parseDouble(scanner.nextLine());
+            //errorVal = Double.parseDouble(scanner.nextLine()); //don't delete
+            errorVal = .00001;
+            System.out.println();
 
-            iterationValues = new double[matrix.length];
+           /* iterationValues = new double[matrix.length]; // don't delete
             char var = (char)(90 - matrix.length +1);
             System.out.println("Please enter the starting solution for the iterative methods: ");
             for (int i =0; i < matrix.length; i++) {
                 System.out.print(var + " = ");
                 iterationValues[i] = Double.parseDouble(scanner.nextLine());
                 var++;
+            }*/
+            System.out.println();
 
-            }
+            System.out.println("Solving the matrix with the Jacobi method gives us: ");
+            jacobiMethod(matrix, iterationValues, errorVal);
+
         }
-
-
-
     }
 
     public static boolean isDiagonallyDom (double[][] matrix) {
@@ -63,35 +69,94 @@ public class Main {
         double otherEl = 0.0;
 
         for(int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[0].length; j++) {
-                if (i == j) diagonalEl = matrix[i][j];
+            for (int j = 0; j < matrix[0].length -1; j++) {
+                if (i == j) diagonalEl = Math.abs(matrix[i][j]);
                 else {
-                    otherEl += matrix[i][j];
+                    otherEl += Math.abs(matrix[i][j]);
                 }
             }
-            if (otherEl < diagonalEl) {
+            if (otherEl > diagonalEl) {
                 answer = false;
                 break;
             }
+            diagonalEl = 0.0;
+            otherEl = 0.0;
         }
         return answer;
     }
 
-    public static double[] jocabiMethod(double[][] matrix) {
+    // ********* JACOBI WORKS BUT GIVES YOU AN OFF ROUNDING VALUE *****************
+    public static double[] jacobiMethod(double[][] matrix, double[] firstItVals, double errorVal) {
+        int maxIterations = 1;
+        double[] secondItVals = new double[firstItVals.length];
+        double numerator = 0;
+        double denomenator = 0;
+
+
+        while(maxIterations != 51) {
+            int skipper = 0;
+            int counter = 0;
+            for (int i = 0; i < matrix.length; i++) {
+                numerator = matrix[i][matrix[0].length-1];
+                denomenator = matrix[i][i];
+
+                for (int j = 0; j < matrix[0].length -1; j++) {
+                    if (counter == skipper) {
+                        skipper++;
+                        continue;
+                    }
+                    else skipper++;
+                    numerator -= matrix[i][j] * firstItVals[j];
+                }
+                secondItVals[i] = numerator/denomenator;
+                skipper = 0;
+                counter++;
+            }
+
+            if (maxIterations == 1) {
+                System.out.println("X column vector at iteration " + maxIterations + ": ");
+                System.out.print("[");
+                for(int i =0; i < firstItVals.length; i++) {
+                    System.out.printf("%.4f", firstItVals[i]);
+                    if (i < firstItVals.length-1) System.out.print(" ");
+                }
+                System.out.println("]T");
+            }
+            System.out.println("X column vector at iteration " + maxIterations + ": ");
+            System.out.print("[");
+            for(int i =0; i < firstItVals.length; i++) {
+                System.out.printf("%.4f", secondItVals[i]);
+                if (i < firstItVals.length-1) System.out.print(" ");
+            }
+            System.out.println("]T");
+
+            double l2NormVal = l2Norm(firstItVals, secondItVals);
+            if (l2NormVal < errorVal) return secondItVals;
+            maxIterations++;
+            firstItVals = Arrays.copyOf(secondItVals, secondItVals.length);
+        }
+        System.out.println("Sorry the desired error wasn't achieved in 50 iterations. Here is " +
+                "the value at the 50th iteration: ");
+        return secondItVals;
+    }
+
+    public static double[] gaussSeidelMethod(double[][] matrix, double[] firstItVals, double errorVal) {
         double[] answer = {};
         return answer;
     }
 
-    public static double[] gaussSeidelMethod(double[][] matrix) {
-        double[] answer = {};
-        return answer;
+    public static double l2Norm(double[] firstItVals, double[] secondItVals) {
+        double numerator = 0;
+        double denomenator = 0;
+
+        for (int i = 0; i < firstItVals.length; i++) {
+            numerator += Math.pow((secondItVals[i]-firstItVals[i]), 2);
+            denomenator += Math.pow(secondItVals[i], 2);
+        }
+        return Math.sqrt(numerator) / Math.sqrt(denomenator);
     }
 
-    public static double l2Norm(double[][] matrix) {
-        double answer = 0;
-        return answer;
-    }
-
+    //********************** MIGHT NOT NEED THIS CODE ******************************
     public static void printXColVector(double[] vector) {
         for (double value: vector) {
             System.out.println(value + " ");
