@@ -27,7 +27,7 @@ public class Main {
         //userChoice = Integer.parseInt(scanner.nextLine()); //don't delete
         userChoice = 2; //DEBUG CODE
 
-       /* if (userChoice == 1) { //don't delete
+        /*if (userChoice == 1) { //don't delete
             matrix = manualMatrix(scanner, numOfEquations);
         }
         else {
@@ -57,9 +57,17 @@ public class Main {
             }*/
             System.out.println();
 
-            System.out.println("Solving the matrix with the Jacobi method gives us: ");
-            jacobiMethod(matrix, iterationValues, errorVal);
-
+            System.out.println("Would you like to use the Gauss-Seidel (option 1) or Jacobi method (option 2) to solve the matrix?\n" +
+                    "Type 1 for option 1 or 2 for option 2: \n");
+            userChoice = Integer.parseInt(scanner.nextLine());
+            if (userChoice == 1) {
+                System.out.println("Solving the matrix with the Gauss-Seidel method gives us: ");
+                gaussSeidelMethod(matrix, iterationValues, errorVal);
+            }
+            else {
+                System.out.println("Solving the matrix with the Jacobi method gives us: ");
+                jacobiMethod(matrix, iterationValues, errorVal);
+            }
         }
     }
 
@@ -87,7 +95,7 @@ public class Main {
 
     // ********* JACOBI WORKS BUT GIVES YOU AN OFF ROUNDING VALUE *****************
     public static double[] jacobiMethod(double[][] matrix, double[] firstItVals, double errorVal) {
-        int maxIterations = 1;
+        int maxIterations = 1; //up to 51
         double[] secondItVals = new double[firstItVals.length];
         double numerator = 0;
         double denomenator = 0;
@@ -140,9 +148,59 @@ public class Main {
         return secondItVals;
     }
 
-    public static double[] gaussSeidelMethod(double[][] matrix, double[] firstItVals, double errorVal) {
-        double[] answer = {};
-        return answer;
+    // ******************************* WORKS BUT GIVES OFF ROUNDING VALUES *****************************************************************
+    public static double[] gaussSeidelMethod(double[][] matrix, double[] startingItVals, double errorVal) {
+        int maxIterations = 1; //up to 51
+        double[] updatedItVals = new double[startingItVals.length];
+        double numerator = 0;
+        double denomenator = 0;
+
+
+        while(maxIterations != 51) {
+            int skipper = 0;
+            int counter = 0;
+            for (int i = 0; i < matrix.length; i++) {
+                numerator = matrix[i][matrix[0].length-1];
+                denomenator = matrix[i][i];
+
+                for (int j = 0; j < matrix[0].length -1; j++) {
+                    if (counter == skipper) {
+                        skipper++;
+                        continue;
+                    }
+                    else skipper++;
+                    numerator -= matrix[i][j] * updatedItVals[j];
+                }
+                updatedItVals[i] = numerator/denomenator;
+                skipper = 0;
+                counter++;
+            }
+
+            if (maxIterations == 1) {
+                System.out.println("X column vector at iteration " + maxIterations + ": ");
+                System.out.print("[");
+                for(int i =0; i < startingItVals.length; i++) {
+                    System.out.printf("%.4f", startingItVals[i]);
+                    if (i < startingItVals.length-1) System.out.print(" ");
+                }
+                System.out.println("]T");
+            }
+            System.out.println("X column vector at iteration " + maxIterations + ": ");
+            System.out.print("[");
+            for(int i =0; i < startingItVals.length; i++) {
+                System.out.printf("%.4f", updatedItVals[i]);
+                if (i < startingItVals.length-1) System.out.print(" ");
+            }
+            System.out.println("]T");
+
+            double l2NormVal = l2Norm(startingItVals, updatedItVals);
+            if (l2NormVal < errorVal) return updatedItVals;
+            maxIterations++;
+            startingItVals = Arrays.copyOf(updatedItVals, updatedItVals.length);
+        }
+        System.out.println("Sorry the desired error wasn't achieved in 50 iterations. Here is " +
+                "the value at the 50th iteration: ");
+        return updatedItVals;
     }
 
     public static double l2Norm(double[] firstItVals, double[] secondItVals) {
@@ -156,12 +214,6 @@ public class Main {
         return Math.sqrt(numerator) / Math.sqrt(denomenator);
     }
 
-    //********************** MIGHT NOT NEED THIS CODE ******************************
-    public static void printXColVector(double[] vector) {
-        for (double value: vector) {
-            System.out.println(value + " ");
-        }
-    }
 
     public static double[][] manualMatrix(Scanner scanner, int numOfEquations) {
         double[][] matrix = new double[numOfEquations][numOfEquations + 1];
