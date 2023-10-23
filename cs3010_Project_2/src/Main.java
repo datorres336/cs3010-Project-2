@@ -21,9 +21,7 @@ public class Main {
 
         System.out.println("Would you like to manually enter the matrix values for " +
                 "the equations (option 1) or enter a matrix text file? (option 2) \n " +
-                "Enter 1 for option 1 or 2 for option 2. \n" +
-                "REMINDER: Matrix must be diagonally dominant in order to be solved with " +
-                "the Jacobi and Gauss-Seidel methods");
+                "Enter 1 for option 1 or 2 for option 2: ");
         userChoice = Integer.parseInt(scanner.nextLine());
 
         if (userChoice == 1) {
@@ -32,12 +30,31 @@ public class Main {
         else {
             matrix = txtFileMatrix(scanner, numOfEquations);
         }
+
         System.out.println("Your matrix is: ");
         printMatrix(matrix);
+        System.out.println();
 
         System.out.println("\nYour matrix is diagonally dominant: " + isDiagonallyDom(matrix));
         if(!isDiagonallyDom(matrix)) System.out.println("Sorry, unable to solve this " +
                 "matrix with Jacobi or Gauss-Seidel methods. Please try another matrix. ");
+        else {
+            System.out.println("Please input a desired stopping error: ");
+            errorVal = Double.parseDouble(scanner.nextLine());
+
+            iterationValues = new double[matrix.length];
+            char var = (char)(90 - matrix.length +1);
+            System.out.println("Please enter the starting solution for the iterative methods: ");
+            for (int i =0; i < matrix.length; i++) {
+                System.out.print(var + " = ");
+                iterationValues[i] = Double.parseDouble(scanner.nextLine());
+                var++;
+
+            }
+        }
+
+
+
     }
 
     public static boolean isDiagonallyDom (double[][] matrix) {
